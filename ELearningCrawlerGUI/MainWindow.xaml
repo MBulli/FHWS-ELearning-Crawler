@@ -1,0 +1,41 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ELearningCrawlerGUI" x:Class="ELearningCrawlerGUI.MainWindow"
+        Title="ELeraning Crawler" Height="394" Width="800">
+    <Window.DataContext>
+        <local:MainWindowViewModel/>
+    </Window.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <GroupBox x:Name="loginGroupBox" Header="1. Login" Margin="10,10,10,5">
+            <WrapPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                    <TextBlock TextWrapping="Wrap" Text="Anmeldename:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBox x:Name="usernameBox" TextWrapping="Wrap" VerticalAlignment="Center" Width="120" Margin="0" KeyUp="usernameBox_KeyUp" Text="{Binding Username}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                    <TextBlock TextWrapping="Wrap" Text="Kennwort:" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <PasswordBox x:Name="passwordBox" VerticalAlignment="Center"  Width="120" Margin="0" KeyUp="passwordBox_KeyUp"/>
+                </StackPanel>
+                <Button x:Name="loginBtn" Content="Login" HorizontalAlignment="Left" Width="75" VerticalAlignment="Center" Click="loginBtn_Click" Margin="20,0,0,0"/>
+                <ProgressBar x:Name="loginProgress" Height="10" Width="100" IsIndeterminate="True" Margin="20,0,0,0"/>
+            </WrapPanel>
+        </GroupBox>
+        <GroupBox Header="2. Kurse" Margin="10,5" Grid.Row="1" Grid.Column="0">
+            <DataGrid x:Name="coursesDataGrid" AutoGenerateColumns="False" ItemsSource="{Binding Courses}" SelectionMode="Single" Margin="5">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Binding="{Binding IsActivated}" ClipboardContentBinding="{x:Null}" Header="Laden?" CanUserReorder="False"/>
+                    <DataGridTextColumn Binding="{Binding Name}" ClipboardContentBinding="{x:Null}" Header="Name" IsReadOnly="True" CanUserReorder="False" CanUserResize="False" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+        <Button x:Name="downloadButton" Content="3. DOWNLOAD" Margin="10,5,10,10" Grid.Row="2" Height="30" VerticalAlignment="Top" Grid.Column="0" Click="downloadButton_Click"/>
+
+
+    </Grid>
+</Window>
