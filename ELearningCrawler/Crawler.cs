@@ -163,7 +163,10 @@ namespace ELearningCrawler
 
                     HtmlDocument course = await HtmlDocumentFromUrl(courseLink);
 
-                    string destFolder = Path.Combine(this.DestinationFolder, courseName);
+                    string destFolder = courseName;
+                    if (!string.IsNullOrEmpty(this.DestinationFolder))
+                        Path.Combine(this.DestinationFolder, courseName);
+
                     Directory.CreateDirectory(destFolder);
 
                     await ParseCourse(course, destFolder);
