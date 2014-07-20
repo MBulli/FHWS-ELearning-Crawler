@@ -23,9 +23,9 @@ namespace ELearningCrawler
         public bool ShouldDownloadAll { get; set; }
         public string DestinationFolder { get; set; }
 
-        public void DownloadAll()
+        public async Task DownloadAll()
         {
-            ParseCourses();
+            await ParseCourses();
         }
 
         static Crawler()
@@ -127,7 +127,7 @@ namespace ELearningCrawler
             }
         }
 
-        private async void ParseCourses()
+        private async Task ParseCourses()
         {
             HtmlDocument doc = await HtmlDocumentFromUrl("https://elearning.fhws.de/my/");
 
@@ -135,46 +135,47 @@ namespace ELearningCrawler
 
             if (this.ShouldDownloadAll)
             {
-                courses = doc.DocumentNode.SelectNodes("//div[@class='coc-course' or @class='coc-course coc-hidden']/div/div/h3/a");
+                courses = doc.DocumentNode.SelectNodes("//div[@class='coc-course' or @class='coc-course coc-hidden']//h3[@class='main']/a");
             }
             else
             {
-                courses = doc.DocumentNode.SelectNodes("//div[@class='coc-course']/div/div/h3/a");
+                courses = doc.DocumentNode.SelectNodes("//div[@class='coc-course']//h3[@class='main']/a");
             }
 
             if (courses == null || courses.Count == 0)
+                return; // TODO fehler Ausgabe
+
+            this.courseCount = courses.Count;
+
+            Task.WaitAll(courses.Select(node =>
+            {
+                return FollowCourseLink(node);
+            }).ToArray());
+        }
+
+        private async Task FollowCourseLink(HtmlNode linkNode)
+        {
+            if (linkNode.Attributes["title"] == null || string.IsNullOrEmpty(linkNode.Attributes["title"].Value))
+                return;
+            if (linkNode.Attributes["href"] == null || string.IsNullOrEmpty(linkNode.Attributes["href"].Value))
                 return;
 
-            courseCount = courses.Count;
+            string courseName = linkNode.Attributes["title"].Value;
+            string courseLink = linkNode.Attributes["href"].Value;
 
-            foreach (HtmlNode node in courses)
-            {
-                Task t = new Task(async () =>
-                {
-                    if (node.Attributes["title"] == null || string.IsNullOrEmpty(node.Attributes["title"].Value))
-                        return;
-                    if (node.Attributes["href"] == null || string.IsNullOrEmpty(node.Attributes["href"].Value))
-                        return;
+            Console.WriteLine("Found course '{0}' follow link: {1}", courseName, linkNode.Attributes["href"].Value);
 
-                    string courseName = node.Attributes["title"].Value;
-                    string courseLink = node.Attributes["href"].Value;
+            HtmlDocument course = await HtmlDocumentFromUrl(courseLink);
 
-                    Console.WriteLine("Found course '{0}' follow link: {1}", courseName, node.Attributes["href"].Value);
+            string destFolder = courseName;
+            if (!string.IsNullOrEmpty(this.DestinationFolder))
+                Path.Combine(this.DestinationFolder, courseName);
 
-                    HtmlDocument course = await HtmlDocumentFromUrl(courseLink);
+            Directory.CreateDirectory(destFolder);
 
-                    string destFolder = courseName;
-                    if (!string.IsNullOrEmpty(this.DestinationFolder))
-                        Path.Combine(this.DestinationFolder, courseName);
+            await ParseCourse(course, destFolder);
 
-                    Directory.CreateDirectory(destFolder);
-
-                    await ParseCourse(course, destFolder);
-
-                    ConsoleWriteLine(ConsoleColor.Green, "Finished {0}/{1} courses.", ++currentCourses, courseCount);
-                });
-                t.Start();
-            }
+            ConsoleWriteLine(ConsoleColor.Green, "Finished {0}/{1} courses.", ++currentCourses, courseCount);
         }
 
         private async Task ParseCourse(HtmlDocument course, string dest)

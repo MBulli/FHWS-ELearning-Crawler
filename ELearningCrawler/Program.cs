@@ -22,19 +22,16 @@ namespace ELearningCrawler
                     Console.WriteLine();
                 }
 
-
-                Start(options);
+                Start(options).Wait();
             }
             else
             {
                 CommandLine.Text.HelpText txt = CommandLine.Text.HelpText.AutoBuild(options);
                 Console.WriteLine(txt.ToString());
             }
-
-            Console.ReadLine();
         }
 
-        static async void Start(Options options)
+        static async Task Start(Options options)
         {
             Crawler c = new Crawler();
 
@@ -45,12 +42,14 @@ namespace ELearningCrawler
             try
             {
                 await c.LoginToELeraning(options.Username, options.Password);
-                c.DownloadAll();
+                await c.DownloadAll();
             }
             catch (System.Net.WebException ex)
             {
+                ConsoleColor defColor = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("Fail! {0} ({1})", ex.Message, ex.Status);
+                Console.ForegroundColor = defColor;
             }
         }
 
